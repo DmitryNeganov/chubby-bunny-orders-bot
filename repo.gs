@@ -2,6 +2,44 @@ const doc = SpreadsheetApp.getActive();
 const usersSheet = doc.getSheetByName("users");
 const ordersSheet = doc.getSheetByName("orders");
 const itemsSheet = doc.getSheetByName("items");
+const paymentsSheet = doc.getSheetByName("payments")
+
+class User {
+  constructor(id, tgUsername, name) {
+    this.id = id;
+    this.tgUsername = tgUsername;
+    this.name = name;
+  }
+}
+
+class Order {
+  constructor(id, username, place, status, reliseDate) {
+    this.id = id
+    this.username = username
+    this.place = place
+    this.status = status
+    this.reliseDate = reliseDate
+  }
+}
+
+class Item {
+  constructor(id, orderId, name, quantity, price) {
+    this.id = id
+    this.orderId = orderId
+    this.name = name
+    this.quantity = quantity
+    this.price = price
+  }
+}
+
+class Payment {
+  constructor(id, orderId, crediteDate, paymentSum) {
+    this.id = id
+    this.orderId = orderId
+    this.crediteDate = crediteDate
+    this.paymentSum = paymentSum
+  }
+}
 
 function getUserId(username) {
   Logger.log("username = " + username);
@@ -60,4 +98,78 @@ function getOrderAllItems(orderId) {
     }
   }
   return resultString;
+}
+
+
+
+function getOrdersByUser(username) {
+  var data = ordersSheet.getDataRange().getValues();
+  var ordes = new Array();
+  for (var row = 0; row < data.length; row++) {
+    if (data[row][1] == username) {
+      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4])
+      ordes.push(order);
+    }
+  }
+  return ordes;
+}
+
+function getItemsByOrderId(orderId) {
+  var data = itemsSheet.getDataRange().getValues();
+  var items = new Array();
+  for (var row = 0; row < data.length; row++) {
+    if (data[row][1] == orderId) {
+      var item = new Item(data[row][0], data[row][1], data[row][2], data[row][3], data[row][6])
+      items.push(item);
+    }
+  }
+  return items;
+}
+
+function getPaymentByOrderId(orderId) {
+  var data = paymentsSheet.getDataRange().getValues();
+  for (var row = 0; row < data.length; row++) {
+    if (data[row][1] == orderId) {
+      var payment = new Payment(data[row][0], data[row][1], new Date(data[row][2]), data[row][3])
+      return payment;
+    }
+  }
+  return -1;
+}
+
+function getPaymentsInfoString (username) {
+  var resultString = ""
+  var userOrders = getOrdersByUser(username)
+  for (i = 0; i < userOrders.length; i++) {
+    if (userOrders[i].status == "Доставлен покупателю") {
+      continue
+    }
+    var orderSum = 0;
+    var orderItems = getItemsByOrderId(userOrders[i].id);
+    for (j = 0; j < orderItems.length; j++) {
+      orderSum += orderItems[j].price * orderItems[j].quantity
+    }
+    var payment = getPaymentByOrderId(userOrders[i].id)
+    resultString += "Заказ - " + userOrders[i].id + " стоимость = " + orderSum + " руб. \n"
+    var rest = orderSum - payment.paymentSum 
+    if (rest > 0) {
+      var month = 1 + payment.crediteDate.getMonth()
+      var deadline = payment.crediteDate.getDate() + "." + month + "." + payment.crediteDate.getFullYear()
+      resultString += "Осталось оплатить " + rest + " руб. до " + deadline + "\n\n"
+    } else {
+      resultString += "Оплачен\n\n"
+    }
+  }
+  return resultString
+}
+
+function testRepo() {
+  Logger.log(getPaymentsInfoString("yakushchenko"))
+
+  // var payment = getPaymentByOrderId(3001)
+  // Logger.log(payment);
+
+  // var ids = getOrdersByUser("yakushchenko")
+  // ids.forEach(v => Logger.log(v));
+
 }
