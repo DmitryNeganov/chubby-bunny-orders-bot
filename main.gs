@@ -25,6 +25,10 @@ function doPost(e) {
     send("Пошёл на склад проверять заказы, скоро вернусь 🐰", msgData.chat_id)
     answer = getUserActualOrders(msgData.user_name)
   }
+  if (msgData.text == "/payments") {
+    send("Сейчас посчитаю 🐰", msgData.chat_id)
+    answer = getPaymentsInfoString(msgData.user_name)
+  }
   send(answer, msgData.chat_id)
 }
 
