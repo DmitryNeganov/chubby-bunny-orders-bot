@@ -2,7 +2,6 @@ const doc = SpreadsheetApp.getActive();
 const usersSheet = doc.getSheetByName("users");
 const ordersSheet = doc.getSheetByName("orders");
 const itemsSheet = doc.getSheetByName("items");
-const paymentsSheet = doc.getSheetByName("payments")
 
 class User {
   constructor(id, tgUsername, name) {
@@ -13,12 +12,14 @@ class User {
 }
 
 class Order {
-  constructor(id, username, place, status, reliseDate) {
+  constructor(id, username, place, status, reliseDate, crediteDate, paymentSum) {
     this.id = id
     this.username = username
     this.place = place
     this.status = status
     this.reliseDate = reliseDate
+    this.crediteDate = crediteDate
+    this.paymentSum = paymentSum
   }
 }
 
@@ -29,15 +30,6 @@ class Item {
     this.name = name
     this.quantity = quantity
     this.price = price
-  }
-}
-
-class Payment {
-  constructor(id, orderId, crediteDate, paymentSum) {
-    this.id = id
-    this.orderId = orderId
-    this.crediteDate = crediteDate
-    this.paymentSum = paymentSum
   }
 }
 
@@ -65,7 +57,7 @@ function getUserActualOrders(username) {
     }
   }
   if (resultString == "") {
-    resultString = "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin"
+    resultString = "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
   }
   return resultString;
 }
@@ -107,7 +99,7 @@ function getOrdersByUser(username) {
   var ordes = new Array();
   for (var row = 0; row < data.length; row++) {
     if (data[row][1] == username) {
-      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4])
+      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], data[row][6])
       ordes.push(order);
     }
   }
@@ -137,9 +129,13 @@ function getPaymentByOrderId(orderId) {
   return -1;
 }
 
-function getPaymentsInfoString (username) {
-  var resultString = ""
+function getPaymentsInfoString(username) {
+  var resultString = "Неоплаченные заказы:\n\n"
+  var counter = 0
   var userOrders = getOrdersByUser(username)
+  if (userOrders.length == 0) {
+    return "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+  }
   for (i = 0; i < userOrders.length; i++) {
     if (userOrders[i].status == "Доставлен покупателю") {
       continue
@@ -149,22 +145,30 @@ function getPaymentsInfoString (username) {
     for (j = 0; j < orderItems.length; j++) {
       orderSum += orderItems[j].price * orderItems[j].quantity
     }
-    var payment = getPaymentByOrderId(userOrders[i].id)
-    resultString += "Заказ - " + userOrders[i].id + " стоимость = " + orderSum + " руб. \n"
-    var rest = orderSum - payment.paymentSum 
+    var rest = orderSum - userOrders[i].paymentSum 
     if (rest > 0) {
-      var month = 1 + payment.crediteDate.getMonth()
-      var deadline = payment.crediteDate.getDate() + "." + month + "." + payment.crediteDate.getFullYear()
-      resultString += "Осталось оплатить " + rest + " руб. до " + deadline + "\n\n"
-    } else {
-      resultString += "Оплачен\n\n"
+      var month = 1 + userOrders[i].crediteDate.getMonth()
+      var deadline = userOrders[i].crediteDate.getDate() + "." + month + "." + userOrders[i].crediteDate.getFullYear()
+    
+      resultString += "•Заказ #<b>" + userOrders[i].id + "</b>\n"
+      if (userOrders[i].crediteDate < Date.now()) {
+        resultString += "❗️"
+      }
+      resultString += rest + " руб. <i>оплатить до <b>" + deadline + "</b></i>\n"
+      counter += rest
     }
+  }
+  if (counter == 0) {
+    resultString = "✔️ Все Ваши заказы оплачены"
+  } else {
+    resultString += "<b>Итого к оплате: " + counter + " руб.</b>\n\n"
+    resultString += "Для оплаты заказов, пожалуйста, напишите: @chubbybunnyadmin"
   }
   return resultString
 }
 
 function testRepo() {
-  Logger.log(getPaymentsInfoString("yakushchenko"))
+  Logger.log(getPaymentsInfoString("specialForDmitry"))
 
   // var payment = getPaymentByOrderId(3001)
   // Logger.log(payment);
