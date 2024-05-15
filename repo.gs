@@ -50,7 +50,7 @@ function getUserActualOrders(username) {
   var data = ordersSheet.getDataRange().getValues();
   for (var i = 0; i < data.length; i++) {
     if (data[i][1] == username  && data[i][3] != "Доставлен покупателю") {
-      var currentOrder = "Заказ #<b>" + data[i][0] + "</b>\n📍 Местоположение: <i>" + data[i][2] + "</i>\n Cтатус: " + getOrderStatusInfo(i) + "\n";
+      var currentOrder = "Заказ #<b>" + data[i][0] + "</b>\n📍 Местоположение: <i>" + data[i][2] + "</i>\n Cтатус: " + getOrderStatusInfo(i) + "\n\n";
       Logger.log(currentOrder);
       resultString = resultString + currentOrder;
       resultString = resultString + getOrderAllItems(data[i][0]) + "\n\n";
