@@ -50,7 +50,7 @@ function getUserActualOrders(username) {
   var data = ordersSheet.getDataRange().getValues();
   for (var i = 0; i < data.length; i++) {
     if (data[i][1] == username  && data[i][3] != "Доставлен покупателю") {
-      var currentOrder = "Заказ #<b>" + data[i][0] + "</b>\n📍 Местоположение: <i>" + data[i][2] + "</i>\n Cтатус: " + getOrderStatusInfo(i) + "\n\n";
+      var currentOrder = "Заказ #<b>" + data[i][0] + "</b>\n📍 Местоположение: <i>" + data[i][2] + "</i>\n Cтатус: " + getOrderStatusInfo(i) + "\n";
       Logger.log(currentOrder);
       resultString = resultString + currentOrder;
       resultString = resultString + getOrderAllItems(data[i][0]) + "\n\n";
@@ -98,8 +98,14 @@ function getOrdersByUser(username) {
   var data = ordersSheet.getDataRange().getValues();
   var ordes = new Array();
   for (var row = 0; row < data.length; row++) {
-    if (data[row][1] == username) {
-      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], data[row][6])
+    if (data[row][1] == username && data[row][3] != "Доставлен покупателю") {
+      var payedSum 
+      if (data[row][6] == "") {
+        payedSum = 0
+      } else {
+        payedSum = parseInt(data[row][6])
+      }
+      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], payedSum)
       ordes.push(order);
     }
   }
@@ -116,17 +122,6 @@ function getItemsByOrderId(orderId) {
     }
   }
   return items;
-}
-
-function getPaymentByOrderId(orderId) {
-  var data = paymentsSheet.getDataRange().getValues();
-  for (var row = 0; row < data.length; row++) {
-    if (data[row][1] == orderId) {
-      var payment = new Payment(data[row][0], data[row][1], new Date(data[row][2]), data[row][3])
-      return payment;
-    }
-  }
-  return -1;
 }
 
 function getPaymentsInfoString(username) {
@@ -147,15 +142,19 @@ function getPaymentsInfoString(username) {
     }
     var rest = orderSum - userOrders[i].paymentSum 
     if (rest > 0) {
-      var month = 1 + userOrders[i].crediteDate.getMonth()
-      var deadline = userOrders[i].crediteDate.getDate() + "." + month + "." + userOrders[i].crediteDate.getFullYear()
-    
       resultString += "•Заказ #<b>" + userOrders[i].id + "</b>\n"
-      if (userOrders[i].crediteDate < Date.now()) {
-        resultString += "❗️"
-      }
-      resultString += rest + " руб. <i>оплатить до <b>" + deadline + "</b></i>\n"
+      resultString += rest + " руб."
       counter += rest
+      if (userOrders[i].crediteDate != "") {
+        if (userOrders[i].crediteDate < Date.now()) { 
+          resultString += "❗️"
+        }
+        var month = 1 + userOrders[i].crediteDate.getMonth()
+        var deadline = userOrders[i].crediteDate.getDate() + "." + month + "." + userOrders[i].crediteDate.getFullYear()
+      resultString += "<i>оплатить до <b>" + deadline + "</b></i>\n\n"
+      } else {
+        resultString += "\n\n"
+      }
     }
   }
   if (counter == 0) {
@@ -169,6 +168,8 @@ function getPaymentsInfoString(username) {
 
 function testRepo() {
   Logger.log(getPaymentsInfoString("specialForDmitry"))
+
+  // Logger.log(parseInt("123"))
 
   // var payment = getPaymentByOrderId(3001)
   // Logger.log(payment);
