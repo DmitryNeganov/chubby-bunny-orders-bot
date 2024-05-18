@@ -46,12 +46,10 @@ function getUserId(username) {
 
 function getUserActualOrders(username) {
   var resultString = "";
-  Logger.log("Ваши заказы: ");
   var data = ordersSheet.getDataRange().getValues();
-  for (var i = 0; i < data.length; i++) {
+  for (var i = 1; i < data.length; i++) {
     if (data[i][1] == username  && data[i][3] != "Доставлен покупателю") {
       var currentOrder = "Заказ #<b>" + data[i][0] + "</b>\n📍 Местоположение: <i>" + data[i][2] + "</i>\n Cтатус: " + getOrderStatusInfo(i) + "\n";
-      Logger.log(currentOrder);
       resultString = resultString + currentOrder;
       resultString = resultString + getOrderAllItems(data[i][0]) + "\n\n";
     }
@@ -85,7 +83,6 @@ function getOrderAllItems(orderId) {
   for (var i = 0; i < data.length; i++) {
     if (data[i][1] == orderId) {
       var currentItem = "   📎 " + data[i][2] + " - " + data[i][3] + " шт.\n";
-      Logger.log(currentItem);
       resultString = resultString + currentItem;
     }
   }
@@ -117,7 +114,7 @@ function getItemsByOrderId(orderId) {
   var items = new Array();
   for (var row = 0; row < data.length; row++) {
     if (data[row][1] == orderId) {
-      var item = new Item(data[row][0], data[row][1], data[row][2], data[row][3], data[row][6])
+      var item = new Item(data[row][0], data[row][1], data[row][2], data[row][3], data[row][5])
       items.push(item);
     }
   }
@@ -167,9 +164,10 @@ function getPaymentsInfoString(username) {
 }
 
 function testRepo() {
-  Logger.log(getPaymentsInfoString("specialForDmitry"))
+  // Logger.log(getPaymentsInfoString("specialForDmitry"))
+  Logger.log(getUserActualOrders("pson_ya"))
+  Logger.log(parseInt("123"))
 
-  // Logger.log(parseInt("123"))
 
   // var payment = getPaymentByOrderId(3001)
   // Logger.log(payment);
