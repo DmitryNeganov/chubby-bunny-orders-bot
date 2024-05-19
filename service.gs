@@ -107,12 +107,13 @@ function getPaymentAllert(status) {
   }
 }
 
+//todo: вынести сумму за все заказы
 function getOrderItemsShipmentPriceInfo(order) {
   var resultString = "";
   var orderItems = getItemsByOrderId(order.id)
   var shipingSum = 0
   for (var i = 0; i < orderItems.length; i++) {
-    shipingSum += orderItems[i].deliveryToRussiaCost
+    shipingSum += orderItems[i].deliveryToRussiaCost * orderItems[i].quantity
     var currentItem = "   📎 " + orderItems[i].name + " - " + orderItems[i].quantity + " шт. Цена доставки - " + orderItems[i].deliveryToRussiaCost + " руб. за шт.\n";
     resultString = resultString + currentItem;
   }
