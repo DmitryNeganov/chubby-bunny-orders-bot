@@ -40,13 +40,33 @@ function getOrdersByUser(username) {
   var ordes = new Array();
   for (var row = 0; row < data.length; row++) {
     if (data[row][1] == username && data[row][3] != "Доставлен покупателю") {
-      var payedSum 
-      if (data[row][6] == "") {
-        payedSum = 0
-      } else {
-        payedSum = parseInt(data[row][6])
-      }
-      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], payedSum)
+      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], data[row][6], data[row][7])
+      ordes.push(order);
+    }
+  }
+  return ordes;
+}
+
+function getShippingOrdersByUser(username) {
+  var data = ordersSheet.getDataRange().getValues();
+  var ordes = new Array();
+  for (var row = 0; row < data.length; row++) {
+    if (data[row][1] == username && 
+          (data[row][3] == "Ожидает отправки" || data[row][3] == "В пути" || data[row][3] == "Прибыл в промежуточный пункт" || data[row][3] == "Находится у админа") 
+      ) {
+      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], data[row][6], data[row][7])
+      ordes.push(order);
+    }
+  }
+  return ordes;
+}
+
+function getUserAllOrders(username) {
+  var data = ordersSheet.getDataRange().getValues();
+  var ordes = new Array();
+  for (var row = 0; row < data.length; row++) {
+    if (data[row][1] == username) {
+      var order = new Order(data[row][0], data[row][1], data[row][2], data[row][3], data[row][4], data[row][5], data[row][6], data[row][7])
       ordes.push(order);
     }
   }
@@ -58,11 +78,22 @@ function getItemsByOrderId(orderId) {
   var items = new Array();
   for (var row = 0; row < data.length; row++) {
     if (data[row][1] == orderId) {
-      var item = new Item(data[row][0], data[row][1], data[row][2], data[row][3], data[row][5], data[row][6])
+      var deliveryToRussiaCost = parseNumberFromCell(data[row][6])
+      var item = new Item(data[row][0], data[row][1], data[row][2], data[row][3], data[row][5], deliveryToRussiaCost)
       items.push(item);
     }
   }
   return items;
+}
+
+function parseNumberFromCell(dataInCell) {
+  var number 
+  if (dataInCell == "") {
+    number = 0
+  } else {
+    number = parseInt(dataInCell)
+  }
+  return number
 }
 
 function testRepo() {
