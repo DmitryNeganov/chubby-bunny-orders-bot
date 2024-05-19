@@ -2,15 +2,13 @@ function getUserActualOrders(username) {
   var resultString = "";
   var userOrders = getOrdersByUser(username)
   for (var i = 0; i < userOrders.length; i++) {
-    if (userOrders[i].status != "Доставлен покупателю") {
-      var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n Cтатус: " + userOrders[i].status
-      if (userOrders[i].status == "Заказан") {
-        currentOrder += getOrderReliseDate(userOrders[i])
-      }
-      currentOrder += "\n";
-      resultString += currentOrder
-      resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
+    var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n Cтатус: " + userOrders[i].status
+    if (userOrders[i].status == "Заказан") {
+      currentOrder += getOrderReliseDate(userOrders[i])
     }
+    currentOrder += "\n";
+    resultString += currentOrder
+    resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
   }
   if (resultString == "") {
     resultString = "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
@@ -82,10 +80,61 @@ function getCreditInfoString(username) {
   return resultString
 }
 
+function getShippingOrdersForPayment(username) {
+  var resultString = ""
+  var shippingOrders = getShippingOrdersByUser(username)
+  for (i = 0; i < shippingOrders.length; i++) {
+    var orderId = shippingOrders[i].id
+    var status = shippingOrders[i].status
+    var currentOrderPaymentInfo = `Заказ #<b>${orderId}</b>\nСтатус: ${status}\n`
+    currentOrderPaymentInfo += getOrderItemsShipmentPriceInfo(shippingOrders[i])
+    resultString += currentOrderPaymentInfo + "\n\n" 
+  }
+
+  return resultString
+  //(data[row][3] == "Ожидает отправки" || data[row][3] == "В пути" || data[row][3] == "Прибыл в промежуточный пункт" || data[row][3] == "Находится у админа") 
+}
+
+function getPaymentAllert(status) {
+  if (status == "Ожидает отправки") {
+    return ""
+  } else if (status == "В пути") {
+    return "❕"
+  } else if (status == "Прибыл в промежуточный пункт") {
+    return "❗️"
+  } else if (status == "Находится у админа") {
+    return "❗️❗️❗️"
+  }
+}
+
+function getOrderItemsShipmentPriceInfo(order) {
+  var resultString = "";
+  var orderItems = getItemsByOrderId(order.id)
+  var shipingSum = 0
+  for (var i = 0; i < orderItems.length; i++) {
+    shipingSum += orderItems[i].deliveryToRussiaCost
+    var currentItem = "   📎 " + orderItems[i].name + " - " + orderItems[i].quantity + " шт. Цена доставки - " + orderItems[i].deliveryToRussiaCost + " руб. за шт.\n";
+    resultString = resultString + currentItem;
+  }
+  if (shipingSum > order.deliveryToRussiaSum){
+    var allertIfNeeded = getPaymentAllert(order.status)
+    resultString += `${allertIfNeeded}<b>Итого к оплате за доставку: ${shipingSum} руб.</b>`
+  } else {
+    resultString += "✔️ Доставка оплачена"
+  }
+  return resultString;
+}
+
+
+
 function testGetUserActualOrders() {
   Logger.log(getUserActualOrders("specialForDmitry"))
 }
 
 function testGetCreditInfoString() {
   Logger.log(getCreditInfoString("specialForDmitry"))
+}
+
+function testGetShippingOrdersForPayment() {
+  Logger.log(getShippingOrdersForPayment("specialForDmitry"))
 }
