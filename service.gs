@@ -83,15 +83,22 @@ function getCreditInfoString(username) {
 function getShippingOrdersForPayment(username) {
   var resultString = ""
   var shippingOrders = getShippingOrdersByUser(username)
+  var ordersShipingSum = 0
   for (i = 0; i < shippingOrders.length; i++) {
     var orderId = shippingOrders[i].id
     var status = shippingOrders[i].status
     var currentOrderPaymentInfo = `Заказ #<b>${orderId}</b>\nСтатус: ${status}\n`
-    currentOrderPaymentInfo += getOrderItemsShipmentPriceInfo(shippingOrders[i])
+    var itemsInfoAndPrice = getOrderItemsShipmentPriceInfo(shippingOrders[i])
+    currentOrderPaymentInfo += itemsInfoAndPrice.info
     resultString += currentOrderPaymentInfo + "\n\n" 
+    ordersShipingSum += itemsInfoAndPrice.price
   }
   if (shippingOrders.length == 0) {
     return "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+  }
+  if (ordersShipingSum != 0) {
+    resultString += "<b>Итого к оплате за доставку всех заказов " + ordersShipingSum + " руб.</b>\n\n"
+    resultString += "Для оплаты доставки, пожалуйста, напишите: @chubbybunnyadmin"
   }
   return resultString
 }
@@ -105,6 +112,13 @@ function getPaymentAllert(status) {
     return "❗️"
   } else if (status == "Находится у админа") {
     return "❗️❗️❗️"
+  }
+}
+
+class ItemsInfoAndPrice {
+  constructor(info, price) {
+  this.info = info
+  this.price = price
   }
 }
 
@@ -125,7 +139,7 @@ function getOrderItemsShipmentPriceInfo(order) {
     resultString += "✔️ Доставка оплачена"
   }
 
-  return resultString;
+  return new ItemsInfoAndPrice(resultString, shipingSum)
 }
 
 
