@@ -90,9 +90,10 @@ function getShippingOrdersForPayment(username) {
     currentOrderPaymentInfo += getOrderItemsShipmentPriceInfo(shippingOrders[i])
     resultString += currentOrderPaymentInfo + "\n\n" 
   }
-
+  if (shippingOrders.length == 0) {
+    return "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+  }
   return resultString
-  //(data[row][3] == "Ожидает отправки" || data[row][3] == "В пути" || data[row][3] == "Прибыл в промежуточный пункт" || data[row][3] == "Находится у админа") 
 }
 
 function getPaymentAllert(status) {
@@ -123,6 +124,7 @@ function getOrderItemsShipmentPriceInfo(order) {
   } else {
     resultString += "✔️ Доставка оплачена"
   }
+
   return resultString;
 }
 
