@@ -94,11 +94,18 @@ function getShippingOrdersForPayment(username) {
     ordersShipingSum += itemsInfoAndPrice.price
   }
   if (shippingOrders.length == 0) {
-    return "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+    if (getUserAllOrders(username).length > 0) {
+      return "На данный момент Вам не требуется оплачивать доставку. Оплата будет доступна после того, как заказ перейдет в статус \"Ожидает отправки\".\nПроверить статусы заказов Вы можете выбрав в меню \"Мои заказы\" или нажав /orders\nЕсли Вы хотите сделать новый заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+    } else {
+      return "На данный момент у Вас нет активных заказов и оплат.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+    }
+    
   }
   if (ordersShipingSum != 0) {
     resultString += "<b>Итого к оплате за доставку всех заказов " + ordersShipingSum + " руб.</b>\n\n"
     resultString += "Для оплаты доставки, пожалуйста, напишите: @chubbybunnyadmin"
+  } else {
+
   }
   return resultString
 }
