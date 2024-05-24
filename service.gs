@@ -91,7 +91,7 @@ function getShippingOrdersForPayment(username) {
     var itemsInfoAndPrice = getOrderItemsShipmentPriceInfo(shippingOrders[i])
     currentOrderPaymentInfo += itemsInfoAndPrice.info
     resultString += currentOrderPaymentInfo + "\n\n" 
-    ordersShipingSum += itemsInfoAndPrice.price
+    ordersShipingSum += itemsInfoAndPrice.price - shippingOrders[i].deliveryToRussiaSum
   }
   if (shippingOrders.length == 0) {
     if (getUserAllOrders(username).length > 0) {
@@ -101,11 +101,11 @@ function getShippingOrdersForPayment(username) {
     }
     
   }
-  if (ordersShipingSum != 0) {
+  if (ordersShipingSum > 0) {
     resultString += "<b>Итого к оплате за доставку всех заказов " + ordersShipingSum + " руб.</b>\n\n"
     resultString += "Для оплаты доставки, пожалуйста, напишите: @chubbybunnyadmin"
   } else {
-
+    resultString += "✔️ Вся Ваша доставка оплаченa. Спасибо! 🐰"
   }
   return resultString
 }
@@ -141,7 +141,7 @@ function getOrderItemsShipmentPriceInfo(order) {
   }
   if (shipingSum > order.deliveryToRussiaSum){
     var allertIfNeeded = getPaymentAllert(order.status)
-    resultString += `${allertIfNeeded}<b>Итого к оплате за доставку: ${shipingSum} руб.</b>`
+    resultString += `${allertIfNeeded}<b>Итого стоимость доставки до России: ${shipingSum} руб.</b>`
   } else {
     resultString += "✔️ Доставка оплачена"
   }
@@ -160,5 +160,5 @@ function testGetCreditInfoString() {
 }
 
 function testGetShippingOrdersForPayment() {
-  Logger.log(getShippingOrdersForPayment("specialForDmitry"))
+  Logger.log(getShippingOrdersForPayment("Pamparamparam"))
 }
