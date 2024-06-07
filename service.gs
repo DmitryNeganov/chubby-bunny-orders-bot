@@ -65,7 +65,7 @@ function getCreditInfoString(username) {
         }
         var month = 1 + userOrders[i].crediteDate.getMonth()
         var deadline = userOrders[i].crediteDate.getDate() + "." + month + "." + userOrders[i].crediteDate.getFullYear()
-      resultString += "<i>оплатить до <b>" + deadline + "</b></i>\n\n"
+        resultString += " <i>оплатить до <b>" + deadline + "</b></i>\n\n"
       } else {
         resultString += "\n\n"
       }
