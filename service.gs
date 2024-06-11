@@ -7,8 +7,8 @@ function getUserActualOrders(username) {
       currentOrder += getOrderReliseDate(userOrders[i])
     }
     if (userOrders[i].status == "Находится у админа") {
-      currentOrder += " ✔️\n<b>Для того, чтобы оформить доставку 🚚 или сообщить о самовывозе 🏪, напишите пожалуйста @chubbybunnyadmin</b> 🐰"
-    }
+      currentOrder += " ✔️\n<b>Вы можете <a href=\"https://telegra.ph/Pravila-oformleniya-dostavki-otlozhki-razdachisamovyvoza-i-konsolidacii-04-29\">оформить доставку</a> 🚚 или написать @chubbybunnyadmin 🐰 о самовывозе</b>"
+    } 
     currentOrder += "\n";
     resultString += currentOrder
     resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
