@@ -6,6 +6,9 @@ function getUserActualOrders(username) {
     if (userOrders[i].status == "Заказан") {
       currentOrder += getOrderReliseDate(userOrders[i])
     }
+    if (userOrders[i].status == "Находится у админа") {
+      currentOrder += " ✔️\n<b>Для того, чтобы оформить доставку 🚚 или сообщить о самовывозе 🏪, напишите пожалуйста @chubbybunnyadmin</b> 🐰"
+    }
     currentOrder += "\n";
     resultString += currentOrder
     resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
