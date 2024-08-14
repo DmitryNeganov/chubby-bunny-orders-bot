@@ -1,15 +1,7 @@
 const doc = SpreadsheetApp.getActive();
-const usersSheet = doc.getSheetByName("users");
 const ordersSheet = doc.getSheetByName("orders");
 const itemsSheet = doc.getSheetByName("items");
 
-class User {
-  constructor(id, tgUsername, name) {
-    this.id = id;
-    this.tgUsername = tgUsername;
-    this.name = name;
-  }
-}
 
 class Order {
   constructor(id, username, place, status, reliseDate, crediteDate, paymentSum, deliveryToRussiaSum) {
