@@ -1,6 +1,7 @@
 function getUserActualOrders(username) {
   var resultString = "";
-  var userOrders = getOrdersByUser(username)
+  var userOrders = getOrdersByUser(username);
+  
   for (var i = 0; i < userOrders.length; i++) {
     var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n Cтатус: " + userOrders[i].status
     if (userOrders[i].status == "Заказан") {
@@ -152,14 +153,48 @@ function getOrderItemsShipmentPriceInfo(order) {
   return new ItemsInfoAndPrice(resultString, shipingSum)
 }
 
-
-
-function testGetUserActualOrders() {
-  Logger.log(getUserActualOrders("specialForDmitry"))
+function getAtAdminsOrderInfo(username) {
+  var resultString = "";
+  var userOrders = getAtAdminOrdersByUser(username)
+  for (var i = 0; i < userOrders.length; i++) {
+    var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n"
+    resultString += currentOrder
+    resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
+  }
+  resultString += "<b>Вы можете <a href=\"https://telegra.ph/Pravila-oformleniya-dostavki-otlozhki-razdachisamovyvoza-i-konsolidacii-04-29\">оформить доставку</a> 🚚 или написать @chubbybunnyadmin 🐰 о самовывозе</b>"
+  if (userOrders.length == 0) {
+    resultString = "На данный момент у Вас нет заказов, которые находятся у админа.\nЕсли Вы хотите сделать новый заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+  }
+  return resultString;
 }
 
-function testGetCreditInfoString() {
-  Logger.log(getCreditInfoString("specialForDmitry"))
+//ЗАПУСК С КНОПКИ
+function notifyUsersAboutMarkedOrders() {
+  var orderToNotify = getOrdersToNotify()
+
+  for (var i = 0; i < orderToNotify.length; i++) {
+    var notificationText = getNotificationText(orderToNotify[i])
+    var tgChatId = getUserChatId(orderToNotify[i].tgUsername)
+    Logger.log(tgChatId + ": \n" + notificationText)
+    // notify(tgChatId, notificationText)
+  }
+}
+
+function getNotificationText(order) {
+  var notificationText = "Статус Вашего заказа изменился 🐰 \n"
+  notificationText += "Заказ #" + order.id + "\n📍 Местоположение: " + order.place + "\n Cтатус: " + order.status
+  if (order.status == "Заказан") {
+    currentOrder += getOrderReliseDate(order)
+  }
+  return notificationText
+}
+
+function testGetUserActualOrders() {
+  Logger.log(getUserActualOrders("Pamparamparam"))
+}
+
+function testGetAtAdminsOrderInfo() {
+  Logger.log(getAtAdminsOrderInfo("specialForDmitry"))
 }
 
 function testGetShippingOrdersForPayment() {
