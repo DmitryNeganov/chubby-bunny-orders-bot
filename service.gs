@@ -1,23 +1,55 @@
 function getUserActualOrders(username) {
-  var resultString = "";
+  var result = new Array();
   var userOrders = getOrdersByUser(username);
-  
+  var batchSize = 10;
+  var batchCounter = 0;
+  var resultString = "";
   for (var i = 0; i < userOrders.length; i++) {
-    var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n Cтатус: " + userOrders[i].status
-    if (userOrders[i].status == "Заказан") {
-      currentOrder += getOrderReliseDate(userOrders[i])
+    resultString += getCurrentOrderString(userOrders[i])
+    batchCounter++;
+    if (batchCounter == batchSize) {
+      result.push(resultString);
+      Logger.log(resultString);
+      resultString = "";
+      batchCounter = 0;
     }
-    if (userOrders[i].status == "Находится у админа") {
+  }
+  if (batchCounter > 0) {
+    result.push(resultString);
+    Logger.log(resultString);
+  }
+  if (result.length == 0) {
+    result.push("На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰");
+  }
+  return result;
+}
+
+function getCurrentOrderString(order) {
+  var resultString = "";
+  var currentOrder = "Заказ #<b>" + order.id + "</b>\n📍 Местоположение: <i>" + order.place + "</i>\n Cтатус: " + order.status
+    if (order.status == "Заказан") {
+      currentOrder += getOrderReliseDate(order)
+    }
+    if (order.status == "Находится у админа") {
       currentOrder += " ✔️\n<b>Вы можете <a href=\"https://telegra.ph/Pravila-oformleniya-dostavki-otlozhki-razdachisamovyvoza-i-konsolidacii-04-29\">оформить доставку</a> 🚚 или написать @chubbybunnyadmin 🐰 о самовывозе</b>"
-    } 
+    }
+    if (order.isPostponed) {
+      currentOrder += getOrderPostponeDateFormated(order)
+    }
     currentOrder += "\n";
     resultString += currentOrder
-    resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
-  }
-  if (resultString == "") {
-    resultString = "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
-  }
+    resultString += getOrderAllItems(order.id) + "\n\n"
   return resultString;
+}
+
+function getOrderPostponeDateFormated(order) {
+  if (order.postponedDate == "" || order.postponedDate == null) {
+    reliseDate = " на неопределенный срок ⛔️" 
+  } else {
+    var date = new Date(order.postponedDate)
+    var month = 1 + date.getMonth()
+    return " до " + date.getDate() + "." + month + "." + date.getFullYear() + " ⏳"
+  }
 }
 
 function getOrderReliseDate(order) {
@@ -43,15 +75,25 @@ function getOrderAllItems(orderId) {
 }
 
 function getCreditInfoString(username) {
-  var resultString = "Неоплаченные заказы:\n\n"
-  var counter = 0
+  var resultArray = new Array();
+
   var userOrders = getOrdersByUser(username)
   if (userOrders.length == 0) {
-    return "На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+    resultArray.push("На данный момент у Вас нет активных заказов.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰");
+    return resultArray
   }
+  
+  resultArray.push("Неоплаченные заказы:\n\n");
+  var counter = 0;
+
+  var batchSize = 10;
+  var batchCounter = 0;
+  var resultString = "";
+
   for (i = 0; i < userOrders.length; i++) {
+    
     if (userOrders[i].status == "Доставлен покупателю") {
-      continue
+      continue;
     }
     var orderSum = 0;
     var orderItems = getItemsByOrderId(userOrders[i].id);
@@ -60,6 +102,7 @@ function getCreditInfoString(username) {
     }
     var rest = orderSum - userOrders[i].paymentSum 
     if (rest > 0) {
+      batchCounter++;
       resultString += "•Заказ #<b>" + userOrders[i].id + "</b>\n"
       resultString += rest + " руб."
       counter += rest
@@ -74,20 +117,41 @@ function getCreditInfoString(username) {
         resultString += "\n\n"
       }
     }
+    if (batchCounter == batchSize) {
+      resultArray.push(resultString);
+      Logger.log(resultString);
+      resultString = "";
+      batchCounter = 0;
+    }
   }
+
+  if (batchCounter) {
+    resultArray.push(resultString);
+    Logger.log(resultString);
+  }
+
   if (counter == 0) {
-    resultString = "✔️ Все Ваши заказы оплачены"
-  } else {
-    resultString += "<b>Итого к оплате: " + counter + " руб.</b>\n\n"
-    resultString += "Для оплаты заказов, пожалуйста, напишите: @chubbybunnyadmin"
+      resultArray.push("✔️ Все Ваши заказы оплачены")
+      Logger.log("✔️ Все Ваши заказы оплачены");
+    } else {
+      resultArray.push("<b>Итого к оплате: " + counter + " руб.</b>\n\n")
+      resultArray.push("Для оплаты заказов, пожалуйста, напишите: @chubbybunnyadmin")
+      Logger.log("<b>Итого к оплате: " + counter + " руб.</b>\n\n")
+      Logger.log("Для оплаты заказов, пожалуйста, напишите: @chubbybunnyadmin")
   }
-  return resultString
+  
+  return resultArray;
 }
 
 function getShippingOrdersForPayment(username) {
-  var resultString = ""
+  var resultArray = new Array();
   var shippingOrders = getShippingOrdersByUser(username)
   var ordersShipingSum = 0
+
+  var batchSize = 5;
+  var batchCounter = 0;
+  var resultString = ""
+
   for (i = 0; i < shippingOrders.length; i++) {
     var orderId = shippingOrders[i].id
     var status = shippingOrders[i].status
@@ -96,22 +160,39 @@ function getShippingOrdersForPayment(username) {
     currentOrderPaymentInfo += itemsInfoAndPrice.info
     resultString += currentOrderPaymentInfo + "\n\n" 
     ordersShipingSum += itemsInfoAndPrice.price - shippingOrders[i].deliveryToRussiaSum
+
+    batchCounter++;
+    if (batchCounter == batchSize) {
+      resultArray.push(resultString);
+      Logger.log(resultString);
+      resultString = "";
+      batchCounter = 0;
+    }
   }
+
+  if (batchCounter) {
+    resultArray.push(resultString);
+    Logger.log(resultString);
+  }
+  
   if (shippingOrders.length == 0) {
     if (getUserAllOrders(username).length > 0) {
-      return "На данный момент Вам не требуется оплачивать доставку. Оплата будет доступна после того, как заказ перейдет в статус \"Ожидает отправки\".\nПроверить статусы заказов Вы можете выбрав в меню \"Мои заказы\" или нажав /orders\nЕсли Вы хотите сделать новый заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+      resultArray.push("На данный момент Вам не требуется оплачивать доставку. Оплата будет доступна после того, как заказ перейдет в статус \"Ожидает отправки\".\nПроверить статусы заказов Вы можете выбрав в меню \"Мои заказы\" или нажав /orders\nЕсли Вы хотите сделать новый заказ, пожалуйста, напишите @chubbybunnyadmin 🐰");
     } else {
-      return "На данный момент у Вас нет активных заказов и оплат.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+      resultArray.push("На данный момент у Вас нет активных заказов и оплат.\nЕсли Вы хотите сделать заказ, пожалуйста, напишите @chubbybunnyadmin 🐰");
     }
     
   }
   if (ordersShipingSum > 0) {
-    resultString += "<b>Итого к оплате за доставку всех заказов " + ordersShipingSum + " руб.</b>\n\n"
-    resultString += "Для оплаты доставки, пожалуйста, напишите: @chubbybunnyadmin"
+    resultArray.push("<b>Итого к оплате за доставку всех заказов " + ordersShipingSum + " руб.</b>\n\n")
+    resultArray.push("Для оплаты доставки, пожалуйста, напишите: @chubbybunnyadmin")
+    Logger.log("<b>Итого к оплате за доставку всех заказов " + ordersShipingSum + " руб.</b>\n\n");
+    Logger.log("Для оплаты доставки, пожалуйста, напишите: @chubbybunnyadmin");
   } else {
-    resultString += "✔️ Вся Ваша доставка оплаченa. Спасибо! 🐰"
+    resultArray.push("✔️ Вся Ваша доставка оплаченa. Спасибо! 🐰")
+    Logger.log("✔️ Вся Ваша доставка оплаченa. Спасибо! 🐰");
   }
-  return resultString
+  return resultArray
 }
 
 function getPaymentAllert(status) {
@@ -154,18 +235,38 @@ function getOrderItemsShipmentPriceInfo(order) {
 }
 
 function getAtAdminsOrderInfo(username) {
+  var resultArray = new Array();  
+  var batchSize = 5;
+  var batchCounter = 0;
   var resultString = "";
-  var userOrders = getAtAdminOrdersByUser(username)
+  var userOrders = getAtAdminOrdersByUser(username);
+
   for (var i = 0; i < userOrders.length; i++) {
-    var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n"
-    resultString += currentOrder
-    resultString += getOrderAllItems(userOrders[i].id) + "\n\n"
+    var currentOrder = "Заказ #<b>" + userOrders[i].id + "</b>\n📍 Местоположение: <i>" + userOrders[i].place + "</i>\n";
+    resultString += currentOrder;
+    resultString += getOrderAllItems(userOrders[i].id) + "\n\n";
+
+    batchCounter++;
+    if (batchCounter == batchSize) {
+      resultArray.push(resultString);
+      Logger.log(resultString);
+      resultString = "";
+      batchCounter = 0;
+    }
   }
-  resultString += "<b>Вы можете <a href=\"https://telegra.ph/Pravila-oformleniya-dostavki-otlozhki-razdachisamovyvoza-i-konsolidacii-04-29\">оформить доставку</a> 🚚 или написать @chubbybunnyadmin 🐰 о самовывозе</b>"
+
+  if (batchCounter) {
+    resultArray.push(resultString);
+    Logger.log(resultString);
+  }
+
   if (userOrders.length == 0) {
-    resultString = "На данный момент у Вас нет заказов, которые находятся у админа.\nЕсли Вы хотите сделать новый заказ, пожалуйста, напишите @chubbybunnyadmin 🐰"
+    resultArray.push("На данный момент у Вас нет заказов, которые находятся у админа.\nЕсли Вы хотите сделать новый заказ, пожалуйста, напишите @chubbybunnyadmin 🐰");
+  } else {
+    resultArray.push("<b>Вы можете <a href=\"https://telegra.ph/Pravila-oformleniya-dostavki-otlozhki-razdachisamovyvoza-i-konsolidacii-04-29\">оформить доставку</a> 🚚 или написать @chubbybunnyadmin 🐰 о самовывозе</b>");
   }
-  return resultString;
+
+  return resultArray;
 }
 
 //ЗАПУСК С КНОПКИ
@@ -190,7 +291,13 @@ function getNotificationText(order) {
 }
 
 function testGetUserActualOrders() {
-  Logger.log(getUserActualOrders("Pamparamparam"))
+  getUserActualOrders("your_itami")
+  // getUserActualOrders("specialForDmitry")
+}
+
+function testGetCreditInfoString() {
+  Logger.log(getCreditInfoString("your_itami"))
+  // getCreditInfoString("specialForDmitry")
 }
 
 function testGetAtAdminsOrderInfo() {
@@ -198,5 +305,6 @@ function testGetAtAdminsOrderInfo() {
 }
 
 function testGetShippingOrdersForPayment() {
-  Logger.log(getShippingOrdersForPayment("Pamparamparam"))
+  // getShippingOrdersForPayment("specialForDmitry")
+  getShippingOrdersForPayment("nnnthniel")
 }
